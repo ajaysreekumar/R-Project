@@ -1,0 +1,2471 @@
+library(tidyverse)
+library(moderndive)
+library(gapminder)
+library(sjPlot)
+library(stats)
+library(jtools)
+library(dplyr)
+library(zoo)
+library(kableExtra)
+library(scales)
+library(gridExtra)
+library(janitor)
+library(tinytex)
+library(hrbrthemes)
+library(viridis)
+library(scales)
+library(ggrepel)
+library(lubridate)
+library(ggfortify)
+library(gtsummary)
+library(car)
+library(mgcv)
+library(MASS)
+library(mgcViz)
+library(gratia)
+
+##### Introduction and Cleaning the Data   #######
+
+men400 <- read.csv("Men400m.csv",sep=",",na.strings=",")%>% 
+  dplyr::select(-Index,-Wind)
+men800 <- read.csv("Men800m.csv",sep=",",na.strings=",") %>% 
+  dplyr::select(-Index,-Wind)
+men1500 <- read.csv("Men1500m.csv",sep=",",na.strings=",")%>% 
+  dplyr::select(-Index,-Wind)
+women400 <- read.csv("Women400m.csv",sep=",",na.strings=",")%>% 
+  dplyr::select(-Index,-Wind)
+women800 <- read.csv("Women800m.csv",sep=",",na.strings=",")%>% 
+  dplyr::select(-Index,-Wind)
+women1500 <- read.csv("Women1500m.csv",sep=",",na.strings=",")%>% 
+  dplyr::select(-Index,-Wind)
+
+## Summary of record times for the events based on gender
+
+
+summary_time_m400 <- men400 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+summary_time_m800 <- men800 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+summary_time_m1500 <- men1500 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+                          #########MEN########
+
+#men400 data cleaning
+men400$Date <- as.Date(men400$Date, format = "%d / %m / %Y")
+men400$DOB <- as.Date(men400$DOB, format = "%d / %m / %Y")
+
+#men800 data cleaning
+men800$Date <- as.Date(men800$Date, format = "%d / %m / %Y")
+men800$DOB <- as.Date(men800$DOB, format = "%d / %m / %Y") 
+
+#men1500 data cleaning
+men1500$Date <- as.Date(men1500$Date, format = "%d / %m / %Y") 
+men1500$DOB <- as.Date(men1500$DOB, format = "%d / %m / %Y")
+
+
+                          #######WOMEN#########
+
+#women400 data cleaning
+women400$Date <- as.Date(women400$Date, format = "%d / %m / %Y") 
+women400$DOB <- as.Date(women400$DOB, format = "%d / %m / %Y")
+
+
+#women800 data cleaning
+women800$Date <- as.Date(women800$Date, format = "%d / %m / %Y") 
+women800$DOB <- as.Date(women800$DOB, format = "%d / %m / %Y")
+
+
+#women1500 date variable transformation from character vector  to date class
+women1500$Date <- as.Date(women1500$Date, format = "%d / %m / %Y")
+women1500$DOB <- as.Date(women1500$DOB, format = "%d / %m / %Y")
+
+## Exploratory analysis of 400 metres sprint event for men
+
+            ##### Scatterplot for Men400#########
+
+dtbreaks_men400 <- seq(as.Date("1900-09-29"), as.Date("2016-08-14"), length.out = 24)
+
+
+scplot_men400 <- ggplot(men400, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_men400)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = men400$Time, size = 2)+
+  labs(title = "Scatterplot for record times (400 metres for men)")
+
+scplot_men400
+
+    ########## Bar graph of countries for men 400 ########
+
+country_men400 <- ggplot(men400, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented(400 metres for men)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+country_men400
+
+    #####  Age when the athletes set the record   ##########
+
+men400 <- men400 %>% 
+  mutate(rec_age_m400 = trunc((DOB %--% Date) / years(1)))
+
+mean_recage_m400 <- round(mean(men400$rec_age_m400),2)
+
+median_recage_m400 <- round(median(men400$rec_age_m400),2)
+
+
+        ###Density plot for age of men in 400 metres ###
+
+density_men400 <- men400 %>%
+  ggplot( aes(x=rec_age_m400)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of men for records of 400 metres") +
+  geom_vline(aes(xintercept = median_recage_m400),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean(rec_age_m400)+5, label=paste0(" Median\n", median_recage_m400), y=0.0875))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_men400
+
+### Exploratory analysis of 800 metres sprint event for men ###
+
+
+dtbreaks_men800 <- seq(as.Date("1912-07-08"), as.Date("2012-08-09"), length.out = 24)
+
+
+##### Scatterplot for Men800#########
+
+scplot_men800 <- ggplot(men800, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_men800)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = men800$Time, size = 2)+
+  labs(title = "Scatterplot for record times (800 metres for men)")
+
+scplot_men800
+
+##########Bar graph of countries for men 800########
+
+country_men800 <- ggplot(men800, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented (800 metres for men)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+country_men800
+
+#####Age when the athletes set the record ######
+
+men800 <- men800 %>% 
+  mutate(rec_age_m800 = trunc((DOB %--% Date) / years(1)))
+mean_recage_m800 <- round(mean(men800$rec_age_m800),2)
+median_recage_m800 <- round(median(men800$rec_age_m800),2)
+
+
+#Density plot for age of men in 800 metres ###
+
+density_men800 <- men800 %>%
+  ggplot( aes(x=rec_age_m800)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of men for records of 800 metres") +
+  geom_vline(aes(xintercept = median_recage_m800),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean(rec_age_m800)+2.5, label=paste0("Median\n", median_recage_m800), y=0.15))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_men800
+
+## Exploratory analysis of 1500 metres sprint event for men ###
+dtbreaks_men1500 <- seq(as.Date("1912-08-06"), as.Date("1998-07-14"), length.out = 37)
+
+
+##### Scatterplot for Men1500#########
+
+scplot_men1500 <- ggplot(men1500, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_men1500)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = men1500$Time, size = 2)+
+  labs(title = "Scatterplot for record times (1500 metres for men)")
+
+scplot_men1500
+
+
+##########Bar graph for men 1500########
+
+country_men1500 <- ggplot(men1500, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented (1500 metres for men)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+##### Density plot for age of men in 1500 metres ####
+
+men1500 <- men1500 %>% 
+  mutate(rec_age_m1500 = trunc((DOB %--% Date) / years(1)))
+
+mean_recage_m1500 <- round(mean(men1500$rec_age_m1500),2)
+
+median_recage_m1500 <- round(median(men1500$rec_age_m1500),2)
+
+
+density_men1500 <- men1500 %>%
+  ggplot( aes(x=rec_age_m1500)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of men for records of 1500 metres") +
+  geom_vline(aes(xintercept = median_recage_m1500),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean(rec_age_m1500)+5, label=paste0("Median\n", median_recage_m1500), y=0.0875))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_men1500
+
+############### Combined density plot of age of men over all the events#########
+
+##### Dataframe of ages of men ##########
+
+agem400 <- data.frame (event_dist = rep("400 metres",times =24),age = men400$rec_age_m400)
+
+agem800 <- data.frame(event_dist = rep("800 metres",times = 24),age = men800$rec_age_m800)
+
+agem1500 <- data.frame(event_dist = rep("1500 metres",times = 38),age = men1500$rec_age_m1500)
+
+bind_age_men <- bind_rows(agem400, agem800, agem1500)
+
+agesum_men_df <- bind_age_men %>%
+  group_by(event_dist) %>%
+  summarize(median= round(median(age),2), mean = round(mean(age), 2))
+
+agesum_men_df
+
+##### Combined density plot of ages of men over all the events #####
+
+comb_dens_agemen <- ggplot(bind_age_men, aes(x = age, colour = event_dist)) +
+  geom_density()+
+  geom_vline(data = agesum_men_df,aes(xintercept=median, colour = event_dist), linetype="dotdash", size=1)+
+  ggtitle("Density plot of Age of male athletes")+
+  labs(colour = "Event", x = "Age at which the athlete set the record", y = "Density")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+comb_dens_agemen
+
+####### Numerical summary of ages of men #########
+
+summary_age_men <- bind_age_men %>% 
+  group_by(event_dist) %>% 
+  summarize(mean = round(mean(age), 2), std_dev = round(sd(age), 2), Interquartile_range = round(IQR(age), 2))
+
+#### Country plots arranged #####
+
+grid.arrange(country_men400, country_men800, country_men1500)
+
+###### Combined scatterplot for men ######
+
+men400_scatter <- men400 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "400 metres")
+
+men800_scatter <- men800 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "800 metres")
+
+men1500_scatter <- men1500 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "1500 metres")
+
+men_scatter <-  bind_rows(men400_scatter, men800_scatter, men1500_scatter)
+
+
+dtbreaks_men <- seq(as.Date("1900-09-29"), as.Date("2016-08-14"), length.out = 43)
+
+
+combscat_men <- ggplot(men_scatter, aes(x=Date, y=Time, shape=Event, color=Event)) +
+  geom_point()+
+  geom_smooth(method=lm, aes(fill=Event))+
+  scale_color_brewer(palette="Dark2")+
+  scale_x_date(breaks = dtbreaks_men)+
+  theme(legend.position = "none", text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = men_scatter$Time, size = 2)+
+  labs(title = "Scatterplot for record times of men" )
+
+combscat_men
+
+######## Exploratory analysis of datasets of women #########
+
+summary_time_w400 <- women400 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+summary_time_w800 <- women800 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+summary_time_w1500 <- women1500 %>% 
+  summarize(mean = mean(Time), std_dev = sd(Time), Interquartile_range = IQR(Time))
+
+## Exploratory analysis of 400 metres sprint event for women
+
+dtbreaks_women400 <- seq(as.Date("1957-01-06"), as.Date("1985-10-06"), length.out = 28)
+
+##### Scatterplot for Women400 #########
+
+scplot_women400 <- ggplot(women400, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_women400)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = women400$Time, size = 2)+
+  labs(title = "Scatterplot for record times (400 metres for women)")
+
+scplot_women400
+
+
+########## Bar graph of countries for women 400 ########
+
+country_women400 <- ggplot(women400, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented (400 metres for women)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+country_women400
+
+
+#####Age when the athletes set the record ######
+
+women400 <- women400 %>% 
+  mutate(rec_age_w400 = trunc((DOB %--% Date) / years(1)))
+mean_recage_w400 <- round(mean(women400$rec_age_w400),2)
+median_recage_w400 <- round(median(women400$rec_age_w400), 2)
+
+
+
+###### Density plot for age of women in 400 metres #####
+
+density_women400 <- women400 %>%
+  ggplot( aes(x=rec_age_w400)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of women for records of 400 metres") +
+  geom_vline(aes(xintercept = median_recage_w400),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean(rec_age_w400)+5, label=paste0("Median\n", median_recage_w400), y=0.0875))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_women400
+
+## Exploratory analysis of 800 metres sprint event for women
+
+dtbreaks_women800 <- seq(as.Date("1922-08-20"), as.Date("1983-07-26"), length.out = 30)
+
+##### Scatterplot for Women800 #########
+
+scplot_women800 <- ggplot(women800, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_women800)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = women800$Time, size = 2)+
+  labs(title = "Scatterplot for record times (800 metres for women)")
+
+scplot_women800
+
+
+########## Bar graph of countries for women 800 ########
+
+country_women800 <- ggplot(women800, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented (800 metres for women)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+country_women800
+
+
+##### Age when the athletes set the record - women 800 metres ######
+
+women800 <- women800 %>% 
+  mutate(rec_age_w800 = trunc((DOB %--% Date) / years(1)))
+mean_recage_w800 <- round(mean(women800$rec_age_w800, na.rm = TRUE),2)
+median_recage_w800 <- round(median(women800$rec_age_w800, na.rm = TRUE),2)
+
+
+###### Density plot for age of women in 800 metres #####
+
+density_women800 <- women800 %>%
+  ggplot(aes(x=rec_age_w800)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of women for records of 800 metres") +
+  geom_vline(aes(xintercept = median_recage_w800),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean_recage_w800 + 5, label=paste0(" Median\n", median_recage_w800), y=0.0875))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_women800
+
+## Exploratory analysis of 1500 metres sprint event for women
+
+dtbreaks_women1500 <- seq(as.Date("1967-06-03"), as.Date("2015-07-17"), length.out = 14)
+
+##### Scatterplot for Women1500 #########
+
+scplot_women1500 <- ggplot(women1500, aes(x=Date, y=Time)) +
+  geom_point() +
+  geom_smooth(method=lm , color="#004c6d", fill="#69b3a2", se=FALSE) +
+  scale_x_date(breaks = dtbreaks_women1500)+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = women1500$Time, size = 2)+
+  labs(title = "Scatterplot for record times (1500 metres for women)")
+
+scplot_women1500
+
+
+########## Bar graph of countries for women 1500 ########
+
+country_women1500 <- ggplot(women1500, aes(x=Country)) +
+  geom_bar(fill="#004c6d")+
+  ggtitle("The country the athletes represented (1500 metres for women)")+
+  labs(y = "Number of athletes", x = "Country code")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+country_women1500
+
+
+##### Age when the athletes set the record - women 1500 metres ######
+
+women1500 <- women1500 %>% 
+  mutate(rec_age_w1500 = trunc((DOB %--% Date) / years(1)))
+mean_recage_w1500 <- round(mean(women1500$rec_age_w1500, na.rm = TRUE),2)
+
+median_recage_w1500 <- round(median(women1500$rec_age_w1500), 2)
+
+
+###### Density plot for age of women in 1500 metres #####
+
+density_women1500 <- women1500 %>%
+  ggplot(aes(x=rec_age_w1500)) +
+  geom_density(color="#004c6d", alpha=0.8) +
+  ggtitle("Density plot of Age of women for records of 1500 metres") +
+  geom_vline(aes(xintercept = median_recage_w1500),
+             color = "#99d8c9", linetype = "dashed", size = 1)+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text(aes(x=mean_recage_w1500 + 5, label=paste0("Median\n", median_recage_w1500), y=0.0875))+
+  labs(x = "Age at which the athlete set the record", y = "Distribution of Age")
+
+density_women1500
+
+
+############### Combined density plot of age of women over all the events#########
+
+##### Dataframe of ages of women ##########
+
+
+agew400 <- data.frame (event_dist = rep("400 metres",times =28),age = women400$rec_age_w400)
+
+agew800 <- data.frame(event_dist = rep("800 metres",times = 30),age = women800$rec_age_w800)
+
+agew1500 <- data.frame(event_dist = rep("1500 metres",times = 14),age = women1500$rec_age_w1500)
+
+bind_age_women <- bind_rows(agew400, agew800, agew1500)
+
+
+
+agesum_women_df <- bind_age_women %>%
+  group_by(event_dist) %>%
+  summarize(median= round(median(age, na.rm = TRUE),2), mean = round(mean(age,na.rm = TRUE), 2))
+
+
+
+##### Combined density plot #####
+
+comb_dens_agewomen <- ggplot(bind_age_women, aes(x = age, colour = event_dist)) +
+  geom_density()+
+  geom_vline(data = agesum_women_df,aes(xintercept=median, colour = event_dist), linetype="dotdash", size=1)+
+  ggtitle("Density plot of Age of female athletes")+
+  labs(colour = "Event", x = "Age at which the athlete set the record", y = "Density")+
+  theme(panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))
+
+comb_dens_agewomen
+
+####### Numerical summary of ages of women #########
+
+
+
+summary_age_women <- bind_age_women %>% 
+  group_by(event_dist) %>% 
+  summarize(mean = round(mean(age, na.rm = TRUE), 2), std_dev = round(sd(age, na.rm = TRUE), 2), Interquartile_range = round(IQR(age, na.rm = TRUE), 2))
+
+grid.arrange(country_women400, country_women800, country_women1500)
+
+grid.arrange(comb_dens_agemen, comb_dens_agewomen, ncol = 1)
+
+
+
+###### Combined scatterplot for women ######
+
+women400_scatter <- women400 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "400 metres")
+
+women800_scatter <- women800 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "800 metres")
+
+women1500_scatter <- women1500 %>% 
+  dplyr::select(Date, Time) %>% 
+  mutate(Event = "1500 metres")
+
+women_scatter <-  bind_rows(women400_scatter, women800_scatter, women1500_scatter)
+
+
+dtbreaks_women <- seq(as.Date("1922-08-20"), as.Date("2015-07-17"), length.out = 36)
+
+
+combscat_women <- ggplot(women_scatter, aes(x=Date, y=Time, shape=Event, color=Event)) +
+  geom_point()+
+  geom_smooth(method=lm, aes(fill=Event), se = FALSE)+
+  scale_color_brewer(palette="Dark2")+
+  scale_x_date(breaks = dtbreaks_women)+
+  theme(legend.position = "none", text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  geom_text_repel(label = women_scatter$Time, size = 2)+
+  labs(title = "Scatterplot for record times of women" )
+
+combscat_women
+
+
+# Fit a linear model for record times
+
+m400_Date <- as.POSIXct(men400$Date, format="%d / %m / %Y")
+
+cor(as.numeric(m400_Date),men400$Time)
+
+model_l_m400 <- lm(Time ~ Date, data = men400)
+
+summary(model_l_m400)
+
+anova(model_l_m400)
+
+reg_table_m400 <- get_regression_table(model_l_m400, digits = 8)
+reg_table_m400
+
+### Outlier due to altitude of location - Mexico city ####
+
+d_men400 <- cooks.distance(model_l_m400)
+
+r_men400 <- stdres(model_l_m400)
+ndata_men400 <- cbind(men400, d_men400, r_men400)
+ndata_men400[d_men400 > 4/24, ]
+
+# which does not contain the observation corresponding to the
+#venue Mexico city.Hence the model is not affected by the affected 
+#performance of athletes due to high altitude.
+
+regression.points.m400 <- get_regression_points(model_l_m400)
+
+#Plot of residuals vs explanatory variable
+
+p1_m400 <- ggplot(regression.points.m400, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_m400 <- ggplot(regression.points.m400, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_m400, p2_m400, ncol = 2)
+
+
+#plot residuals against previous residuals
+
+p3_m400 <- ggplot(regression.points.m400, aes(x = c(residual[2:24],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+grid.arrange(p1_m400,p3_m400, ncol = 2)
+
+
+#Plot residuals against fitted values and Normal QQ plot
+
+modelplot_m400 <- autoplot(model_l_m400, which = 1:2)
+modelplot_m400
+
+his1_m400 <- ggplot(regression.points.m400, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_m400
+
+#shapiro test of normality for residuals
+
+shapiro.test(regression.points.m400$residual) #p_value > 0.05 >we can assume normality
+
+
+durbinWatsonTest(model_l_m400) #p_value<0.05 ->residuals are auto correlated
+
+### model fitting for  800 metres men ####
+
+
+m800_Date <- as.POSIXct(men800$Date, format="%d / %m / %Y")
+cor(as.numeric(m800_Date),men800$Time)
+model_l_m800 <- lm(Time ~ Date, data = men800)
+summary(model_l_m800)
+anova(model_l_m800)
+regression.points.m800 <- get_regression_points(model_l_m800, digits = 8)
+
+#Plot of residuals vs explanatory variable
+p1_m800 <- ggplot(regression.points.m800, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_m800 <- ggplot(regression.points.m800, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_m800, p2_m800, ncol = 2)
+
+
+#plot residuals against previous residuals
+
+p3_m800 <- ggplot(regression.points.m800, aes(x = c(residual[2:24],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+grid.arrange(p1_m800,p3_m800, ncol = 2)
+
+
+#Plot residuals against fitted values and Normal QQ plot
+modelplot_m800 <- autoplot(model_l_m800, which = 1:2)
+modelplot_m800
+
+his1_m800 <- ggplot(regression.points.m800, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_m800
+
+#Shapiro-Wilk’s method for normality test
+shapiro.test(regression.points.m800$residual)#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_l_m800)#p_value<0.05 ->residuals are auto correlated
+
+
+### Outlier due to altitude of location - Mexico city ####
+
+
+d_men800 <- cooks.distance(model_l_m800)
+
+r_men800 <- stdres(model_l_m800)
+ndata_men800 <- cbind(men800, d_men800, r_men800)
+ndata_men400[d_men800 > 4/24, ]
+
+
+# which does not contain the observation corresponding to 
+#the venue Mexico city. Hence the model is not affected 
+#by the affected performance of athletes due to high altitude.
+
+###model fitting for  1500 metres men
+
+
+m1500_Date <- as.POSIXct(men1500$Date, format="%d / %m / %Y")
+cor(as.numeric(m1500_Date),men1500$Time)
+model_l_m1500 <- lm(Time ~ Date, data = men1500)
+summary(model_l_m1500)
+anova(model_l_m1500)
+regression.points.m1500 <- get_regression_points(model_l_m1500)
+#Plot of residuals vs explanatory variable
+p1_m1500 <- ggplot(regression.points.m1500, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_m1500 <- ggplot(regression.points.m1500, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_m1500, p2_m1500, ncol = 2)
+
+
+#plot residuals against previous residuals
+p3_m1500 <- ggplot(regression.points.m1500, aes(x = c(residual[2:38],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+grid.arrange(p1_m1500,p3_m1500, ncol = 2)
+
+
+
+#Plot residuals against fitted values and Normal QQ plot
+
+modelplot_m1500 <- autoplot(model_l_m1500, which = 1:2)
+modelplot_m1500
+
+his1_m1500 <- ggplot(regression.points.m1500, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_m1500
+
+#Shapiro-Wilk’s method for normality test
+
+shapiro.test(regression.points.m1500$residual) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_l_m1500) #p_value<0.05 ->residuals are auto correlated
+
+grid.arrange(modelplot_m400@plots[[1]], modelplot_m800@plots[[1]], modelplot_m1500@plots[[1]])
+
+
+### model fitting for  400 metres women
+
+
+w400_Date <- as.POSIXct(women400$Date, format="%d / %m / %Y")
+
+cor(as.numeric(w400_Date),women400$Time)
+
+model_l_w400 <- lm(Time ~ Date, data = women400)
+
+summary(model_l_w400)
+anova(model_l_w400)
+
+regression.points.w400 <- get_regression_points(model_l_w400)
+
+#Plot of residuals vs explanatory variable
+
+p1_w400 <- ggplot(regression.points.w400, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_w400 <- ggplot(regression.points.w400, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_w400, p2_w400, ncol = 2)
+
+
+#plot residuals against previous residuals
+
+p3_w400 <- ggplot(regression.points.w400, aes(x = c(regression.points.w400$residual[2:24],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+
+
+
+#Plot residuals against fitted values and Normal QQ plot
+modelplot_w400 <- autoplot(model_l_w400, which = 1:2)
+modelplot_w400
+
+his1_w400 <- ggplot(regression.points.w400, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_w400
+
+#Shapiro-Wilk’s method for normality test
+
+shapiro.test(regression.points.w400$residual) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_l_w400) #p_value<0.05 ->residuals are auto correlated
+
+
+### Outlier due to altitude of location - Mexico city ####
+
+
+d_women400 <- cooks.distance(model_l_w400)
+
+r_women400 <- stdres(model_l_w400)
+
+ndata_women400 <- cbind(women400, d_women400, r_women400)
+
+ndata_women400[d_women400 > 4/28, ]
+
+# which does not contain the observation corresponding to 
+#the venue Mexico city. Hence the model is not affected by 
+#the affected performance of athletes due to high altitude.
+
+####### model fitting for  800 metres women ######
+
+
+w800_Date <- as.POSIXct(women800$Date, format="%d / %m / %Y")
+cor(as.numeric(w800_Date),women800$Time)
+model_l_w800 <- lm(Time ~ Date, data = women800)
+summary(model_l_w800)
+anova(model_l_w800)
+regression.points.w800 <- get_regression_points(model_l_w800)
+
+#Plot of residuals vs explanatory variable
+
+p1_w800 <- ggplot(regression.points.w800, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_w800 <- ggplot(regression.points.w800, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_w800, p2_w800, ncol = 2)
+
+
+#plot residuals against previous residuals
+p3_w800 <- ggplot(regression.points.w800, aes(x = c(regression.points.w800$residual[2:30],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+grid.arrange(p1_w800, p3_w800,ncol = 2)
+
+
+#Plot residuals against fitted values and Normal QQ plot
+modelplot_w800 <- autoplot(model_l_w800, which = 1:2)
+modelplot_w800
+
+his1_w800 <- ggplot(regression.points.w800, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_w800
+
+#Shapiro-Wilk’s method for normality test
+shapiro.test(regression.points.w800$residual) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_l_w800) #p_value<0.05 ->residuals are auto correlated
+
+
+###model fitting for  1500 metres women
+
+
+w1500_Date <- as.POSIXct(women1500$Date, format="%d / %m / %Y")
+cor(as.numeric(w1500_Date),women1500$Time)
+
+model_l_w1500 <- lm(Time ~ Date, data = women1500)
+
+summary(model_l_w1500)
+
+anova(model_l_w1500)
+
+regression.points.w1500 <- get_regression_points(model_l_w1500)
+#Plot of residuals vs explanatory variable
+p1_w1500 <- ggplot(regression.points.w1500, aes(x = Date, y = residual)) +
+  geom_point() +
+  labs(x = "Date", y = "Residual", title = "Residuals vs Date") +
+  geom_hline(yintercept = 0, col = 4, size = 1)
+
+p2_w1500 <- ggplot(regression.points.w1500, aes(x = Time_hat, y = residual)) +
+  geom_point() +
+  labs(x = "Fitted values", y = "Residual", title = "Residuals vs Fitted values") +
+  geom_hline(yintercept = 0, col = 4, size = 1) 
+
+grid.arrange(p1_w1500, p2_w1500, ncol = 2)
+
+
+#plot residuals against previous residuals
+
+p3_w1500 <- ggplot(regression.points.w1500, aes(x = c(regression.points.w1500$residual[2:14],NA),y = residual))+
+  geom_point()+
+  labs(y = "Residuals", x = "Residuals lag 1", title = "Residual Independance")+
+  geom_hline(yintercept = 0, col = 4, size = 1)
+grid.arrange(p1_w1500, p3_w1500, ncol = 2)
+
+
+
+#Plot residuals against fitted values and Normal QQ plot
+modelplot_w1500 <- autoplot(model_l_w1500)
+modelplot_w1500
+
+his1_w1500 <- ggplot(regression.points.w1500, aes(x = residual)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 6) +
+  labs(x = "Residual", title = "Histogram of residuals") 
+his1_w1500
+
+
+
+
+#Shapiro-Wilk’s method for normality test
+shapiro.test(regression.points.w1500$residual) #p_value > 0.05 >we can assume normality
+durbinWatsonTest(model_l_w1500) #p_value<0.05 ->residuals are auto correlated
+
+grid.arrange(modelplot_w400@plots[[1]], modelplot_w800@plots[[1]], modelplot_w1500@plots[[1]] )
+
+
+##### Time transformed to speed variable ######
+
+              ##Men##
+
+##400 metres ##
+men400_speed <- men400 %>% 
+  mutate(speed = round(400/men400$Time,3))
+
+men400_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_m400 <- lm(speed ~ Date, data = men400_speed)
+summary(model_speed_m400)
+anova(model_speed_m400)
+
+autoplot(model_speed_m400)
+
+shapiro.test(residuals.lm(model_speed_m400)) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_m400) #p_value<0.05 ->residuals are auto correlated
+
+###800 metres###
+
+men800_speed <- men800 %>% 
+  mutate(speed = round(800/men800$Time,3))
+
+men800_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_m800 <- lm(speed ~ Date, data = men800_speed)
+summary(model_speed_m800)
+anova(model_speed_m800)
+
+autoplot(model_speed_m800)
+
+shapiro.test(residuals.lm(model_speed_m800))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_m800) #p_value<0.05 ->residuals are auto correlated
+
+###1500 metres###
+
+men1500_speed <- men1500 %>% 
+  mutate(speed = round(1500/men1500$Time,3))
+
+men1500_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_m1500 <- lm(speed ~ Date, data = men1500_speed)
+summary(model_speed_m1500)
+anova(model_speed_m1500)
+
+autoplot(model_speed_m1500)
+
+shapiro.test(residuals.lm(model_speed_m1500))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_m1500) #p_value<0.05 ->residuals are auto correlated
+                    
+                    ####### Women ########
+
+###400 metres###
+
+women400_speed <- women400 %>% 
+  mutate(speed = round(400/women400$Time,3))
+
+women400_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_w400 <- lm(speed ~ Date, data = women400_speed)
+summary(model_speed_w400)
+anova(model_speed_w400)
+
+autoplot(model_speed_w400)
+
+shapiro.test(residuals.lm(model_speed_w400))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_w400) #p_value<0.05 ->residuals are auto correlated
+
+#### 800 metres ###
+
+women800_speed <- women800 %>% 
+  mutate(speed = round(800/women800$Time,3))
+
+women800_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_w800 <- lm(speed ~ Date, data = women800_speed)
+summary(model_speed_w800)
+anova(model_speed_w800)
+
+autoplot(model_speed_w800)
+
+shapiro.test(residuals.lm(model_speed_w800))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_w800) #p_value<0.05 ->residuals are auto correlated
+### 1500 metres ###
+
+women1500_speed <- women1500 %>% 
+  mutate(speed = round(1500/women1500$Time,3))
+
+women1500_speed %>% 
+  ggplot(aes(x = Date, y = speed))+
+  geom_point()+
+  labs(title = "Scatterplot of speed against Date")
+
+model_speed_w1500 <- lm(speed ~ Date, data = women1500_speed)
+summary(model_speed_w1500)
+anova(model_speed_w1500)
+
+autoplot(model_speed_w1500)
+
+shapiro.test(residuals.lm(model_speed_w1500))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_speed_w1500) #p_value<0.05 ->residuals are auto correlated
+
+      #### log transformed Time as response ####     
+
+##men400metre##
+men400 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+model_log_m400 <- lm(log(Time) ~ Date, data = men400)
+summary(model_log_m400)
+anova(model_log_m400)
+
+shapiro.test(residuals.lm(model_log_m400)) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_log_m400) #p_value<0.05 ->residuals are auto correlated
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_log_m400, which = 1:2)
+
+
+reg_table_log_m400 <- get_regression_table(model_log_m400, digits = 8)
+reg_table_log_m400
+
+#data frame with fitted values and residuals
+
+loglm.m400<-data.frame(fit = model_log_m400$fitted.values,
+                       res=model_log_m400$residuals,
+                       time=men400$Time,
+                       res1=c(model_log_m400$residuals[2:24],NA))
+
+
+#Plot fitted values against Time
+plotlog1_m400 <- ggplot(loglm.m400, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_m400<-ggplot(loglm.m400, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_m400, plotlog2_m400, ncol=2)
+
+#Residual histogram
+
+his2_m400 <- ggplot(loglm.m400, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_m400
+
+
+##percentage transformation applied to record time-men400
+men400cent <- men400 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+
+#Model fitting
+
+men400cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+model_cent_m400 <- lm(percentage ~ Date, data = men400cent)
+summary(model_cent_m400)
+anova(model_cent_m400)
+
+shapiro.test(residuals.lm(model_cent_m400))#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_log_m400) #p_value<0.05 ->residuals are auto correlated
+
+
+reg_table_cent_m400 <- get_regression_table(model_cent_m400, digits = 8)
+reg_table_cent_m400
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_cent_m400, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+centlm.m400<-data.frame(fit = model_cent_m400$fitted.values,
+                        res=model_cent_m400$residuals,
+                        time=men400cent$Time,
+                        res1=c(model_cent_m400$residuals[2:24],NA))
+
+
+
+#Plot fitted values against Time
+plotcent1_m400 <- ggplot(centlm.m400, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotcent2_m400<-ggplot(centlm.m400, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_m400, plotcent2_m400, ncol=2)
+
+#Residual histogram
+
+his3_m400 <- ggplot(centlm.m400, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his3_m400
+
+
+
+###### Fitting a gam Men400 ####
+
+TimeZero <- as.Date(c("01/01/1900"), format = "%d / %m / %Y")
+
+men400$Elapsed <- as.numeric((men400$Date - TimeZero)/365.25)
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_m400 <- gam(Time ~ s(Elapsed, bs="cr", k = 17), data=men400, family = Gamma(link = log))
+
+summary(gam0_m400)
+
+par(mfrow=c(1,2))
+
+plot(gam0_m400, residuals=TRUE, cex=3)
+
+gam.check(gam0_m400)
+
+gam1_m400 <- gam(Time ~ s(Elapsed, bs="cr", k = 17),gamma = 1.4, data=men400, family = Gamma(link = log))
+
+summary(gam1_m400)
+
+anova(gam0_m400, gam1_m400, test = "F")
+
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_m400, residuals=TRUE, cex=3)
+
+gam.check(gam1_m400)
+
+##using reml
+
+gam2_m400 <- gam(Time ~ s(Elapsed, bs="cr", k = 17), method = "REML", data=men400, family = Gamma(link = log))
+
+summary(gam2_m400)
+
+gam.check(gam2_m400)
+
+plot(gam2_m400, residuals=TRUE, cex=3)
+
+
+##Using ML
+gam3_m400 <- gam(Time ~ s(Elapsed, bs="cr", k = 17), method = "ML", data=men400, family = Gamma(link = log))
+
+summary(gam3_m400)
+
+gam.check(gam3_m400)
+
+plot(gam3_m400, residuals=TRUE, cex=3)
+
+#comparing gcv, reml and ml
+
+gam1_m400_table <- tidy_gam(gam1_m400)
+gam1_m400_table
+gam2_m400_table <- tidy_gam(gam2_m400)
+gam2_m400_table
+gam3_m400_table <- tidy_gam(gam3_m400)
+gam3_m400_table
+
+
+#compare AIC for each model to check for prediction accuracy
+AIC(gam0_m400)
+AIC(gam1_m400)
+AIC(gam2_m400)
+AIC(gam3_m400)
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_men400 <- c(mean(fitted(gam0_m400)),mean(fitted(gam1_m400)),mean(fitted(gam2_m400)),mean(fitted(gam3_m400)), mean(men400$Time))
+
+fit_men400
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_men400 <- getViz(gam1_m400)
+
+gam_plot1_men400 <- check(viz_gam_men400,
+                          a.qq = list(method = "tnorm", 
+                                      a.cipoly = list(fill = "#004c6d")), 
+                          a.respoi = list(size = 0.5), 
+                          a.hist = list(bins = 4))
+
+gam_plot1_men400
+
+gam_plot2_m400 <- plot( sm(viz_gam_men400, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_m400
+
+##gratia draw plot of best fitting model
+
+gratia_men400 <- draw(gam1_m400, residuals=TRUE)
+gratia_men400
+
+## log transformed model men800 metre ##
+
+
+men800 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+
+
+model_log_m800 <- lm(log(Time) ~ Date, data = men800)
+summary(model_log_m800)
+anova(model_log_m800)
+
+
+reg_table_log_m800 <- get_regression_table(model_log_m800, digits = 8)
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_log_m800, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+loglm.m800<-data.frame(fit = model_log_m800$fitted.values,
+                       res=model_log_m800$residuals,
+                       time=men800$Time,
+                       res1=c(model_log_m800$residuals[2:24],NA))
+
+
+
+#Plot fitted values against Time
+plotlog1_m800 <- ggplot(loglm.m800, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_m800<-ggplot(loglm.m800, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_m800, plotlog2_m800, ncol=2)
+
+#Residual histogram
+
+his2_m800 <- ggplot(loglm.m800, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_m800
+
+#shapiro test of normality for residuals
+
+shapiro.test(regression.points.m800$residual) #p_value > 0.05 >we can assume normality
+
+
+durbinWatsonTest(model_l_m800) #p_value<0.05 ->residuals are auto correlated
+
+## percentage transformation applied to record time-men800 ####
+
+
+men800cent <- men800 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+#Model fitting
+
+men800cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+
+
+model_cent_m800 <- lm(percentage ~ Date, data = men800cent)
+summary(model_cent_m800)
+anova(model_cent_m800)
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_cent_m800, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+centlm.m800<-data.frame(fit = model_cent_m800$fitted.values,
+                        res=model_cent_m800$residuals,
+                        time=men800cent$Time,
+                        res1=c(model_cent_m800$residuals[2:24],NA))
+
+
+
+#Plot fitted values against Time
+plotcent1_m800 <- ggplot(centlm.m800, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotcent2_m800<-ggplot(centlm.m800, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_m800, plotcent2_m800, ncol=2)
+
+#Residual histogram
+
+his3_m800 <- ggplot(centlm.m800, aes(x = res)) +
+  geom_histogram(colour = "black", fill= "#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his3_m800
+
+
+shapiro.test(centlm.m800$res)#p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_cent_m800)#p_value<0.05 ->residuals are auto correlated
+
+###### Fitting a gam Men800  ####
+
+
+men800$Elapsed <- as.numeric((men800$Date - TimeZero)/365.25)
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_m800 <- gam(Time ~ s(Elapsed, bs="cr", k = 14), data=men800, family = Gamma(link = log))
+
+summary(gam0_m800)
+
+gam.check(gam0_m800)
+
+
+par(mfrow=c(1,2))
+
+plot(gam0_m800, residuals=TRUE, cex=3)
+
+
+
+
+
+gam1_m800 <- gam(Time ~ s(Elapsed, bs="cr", k = 14),gamma = 1.4, data=men800, family = Gamma(link = log))
+
+summary(gam1_m800)
+
+gam.check(gam1_m800)
+
+anova(gam0_m800, gam1_m800, test = "F")
+
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_m800, residuals=TRUE, cex=3)
+
+
+
+
+
+##using reml
+
+
+gam2_m800 <- gam(Time ~ s(Elapsed, bs="cr", k = 14), method = "REML", data=men800, family = Gamma(link = log))
+
+summary(gam2_m800)
+
+gam.check(gam2_m800)
+
+
+plot(gam2_m800, residuals=TRUE, cex=3)
+
+
+##Using ML
+gam3_m800 <- gam(Time ~ s(Elapsed, bs="cr", k = 14), method = "ML", data=men800, family = Gamma(link = log))
+
+
+summary(gam3_m800)
+
+gam.check(gam3_m800)
+
+plot(gam3_m800, residuals=TRUE, cex=3)
+
+#comparing gcv, reml and ml
+
+gam1_m800_table <- tidy_gam(gam1_m800)
+gam1_m800_table
+gam2_m800_table <- tidy_gam(gam2_m800)
+gam2_m800_table
+gam3_m800_table <- tidy_gam(gam3_m800)
+gam3_m800_table
+
+
+#compare AIC for each model to check for prediction accuracy
+AIC(gam0_m800)
+AIC(gam1_m800)
+AIC(gam2_m800)
+AIC(gam3_m800)
+
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_men800 <- c(mean(fitted(gam0_m800)),mean(fitted(gam1_m800)),mean(fitted(gam2_m800)),mean(fitted(gam3_m800)), mean(men800$Time))
+
+fit_men800
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_men800 <- getViz(gam1_m800)
+
+gam_plot1_men800 <- check(viz_gam_men800,
+                          a.qq = list(method = "tnorm", 
+                                      a.cipoly = list(fill = "#004c6d")), 
+                          a.respoi = list(size = 0.5), 
+                          a.hist = list(bins = 4))
+
+gam_plot1_men800
+
+gam_plot2_m800 <- plot( sm(viz_gam_men800, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_m800
+
+##gratia draw plot of best fitting model
+
+gratia_men800 <- draw(gam1_m800, residuals=TRUE)
+gratia_men800
+
+## log transformed model men1500 metre ##
+
+
+men1500 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+
+
+model_log_m1500 <- lm(log(Time) ~ Date, data = men1500)
+summary(model_log_m1500)
+anova(model_log_m1500)
+
+
+reg_table_log_m1500 <- get_regression_table(model_log_m1500, digits = 8)
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_log_m1500, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+loglm.m1500<-data.frame(fit = model_log_m1500$fitted.values,
+                        res=model_log_m1500$residuals,
+                        time=men1500$Time,
+                        res1=c(model_log_m1500$residuals[2:38],NA))
+
+
+
+#Plot fitted values against Time
+plotlog1_m1500 <- ggplot(loglm.m1500, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_m1500<-ggplot(loglm.m1500, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_m1500, plotlog2_m1500, ncol=2)
+
+#Residual histogram
+
+his2_m1500 <- ggplot(loglm.m1500, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_m1500
+
+#shapiro test of normality for residuals
+shapiro.test(residuals.lm(model_log_m1500)) #p_value > 0.05 >we can assume normality
+
+
+durbinWatsonTest(model_log_m1500) #p_value<0.05 ->residuals are auto correlated
+
+## percentage transformation applied to record time-men1500 ####
+
+
+men1500cent <- men1500 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+
+#Model fitting
+
+men1500cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+
+model_cent_m1500 <- lm(percentage ~ Date, data = men1500cent)
+
+summary(model_cent_m1500)
+
+anova(model_cent_m1500)
+
+reg_table_cent_m1500 <- get_regression_table(model_cent_m1500, digits = 8)
+
+reg_table_cent_m1500
+#Plot residuals against fitted values and Normal QQ plot
+
+autoplot(model_cent_m1500, which = 1:2)
+
+#data frame with fitted values and residuals
+
+centlm.m1500<-data.frame(fit = model_cent_m1500$fitted.values,
+                         res=model_cent_m1500$residuals,
+                         time=men1500cent$Time,
+                         res1=c(model_cent_m1500$residuals[2:38],NA))
+
+
+
+
+#Plot fitted values against Time
+
+plotcent1_m1500 <- ggplot(centlm.m1500, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+
+plotcent2_m1500<-ggplot(centlm.m1500, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_m1500, plotcent2_m1500, ncol=2)
+
+#Residual histogram
+
+his3_m1500 <- ggplot(centlm.m1500, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals")
+
+his3_m1500
+
+
+shapiro.test(centlm.m1500$res) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_cent_m1500) #p_value<0.05 ->residuals are auto correlated
+
+###### Fitting a gam Men1500  ####
+
+
+men1500$Elapsed <- as.numeric((men1500$Date - TimeZero)/365.25)
+
+##scatterplot of time against the transformed explanatory variable Elapsed ##
+
+scplot_gam_men1500 <- ggplot(men1500, aes(x=Elapsed, y=Time)) +
+  geom_point()+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  labs(title = "Scatterplot for record times (1500 metres for men)")
+
+scplot_gam_men1500
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_m1500 <- gam(Time ~ s(Elapsed, bs="ad", k = 17), data=men1500, family = Gamma(link = log))
+
+summary(gam0_m1500)
+
+gam.check(gam0_m1500)
+
+
+par(mfrow=c(1,2))
+
+plot(gam0_m1500, residuals=TRUE, cex=3)
+
+
+dim(men1500)
+gam1_m1500 <- gam(Time ~ s(Elapsed, bs="ad", k = 17),gamma = 1.4, data=men1500, family = Gamma(link = log))
+
+summary(gam1_m1500)
+
+gam.check(gam1_m1500)
+
+anova(gam0_m1500, gam1_m1500, test = "F")
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_m1500, residuals=TRUE, cex=3)
+
+
+##using reml
+
+
+gam2_m1500 <- gam(Time ~ s(Elapsed, bs="ad", k = 17), method = "REML", data=men1500, family = Gamma(link = log))
+
+summary(gam2_m1500)
+
+gam.check(gam2_m1500)
+
+
+plot(gam2_m1500, residuals=TRUE, cex=3)
+
+
+##Using ML
+gam3_m1500 <- gam(Time ~ s(Elapsed, bs="ad", k = 17), method = "ML", data=men1500, family = Gamma(link = log))
+
+
+summary(gam3_m1500)
+
+gam.check(gam3_m1500)
+
+plot(gam3_m1500, residuals=TRUE, cex=3)
+
+#comparing gcv, reml and ml
+
+gam1_m1500_table <- tidy_gam(gam1_m1500)
+gam1_m1500_table
+gam2_m1500_table <- tidy_gam(gam2_m1500)
+gam2_m1500_table
+gam3_m1500_table <- tidy_gam(gam3_m1500)
+gam3_m1500_table
+
+
+#compare AIC for each model to check for prediction accuracy
+AIC(gam0_m1500)
+AIC(gam1_m1500)
+AIC(gam2_m1500)
+AIC(gam3_m1500)
+
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_men1500 <- c(mean(fitted(gam0_m1500)),mean(fitted(gam1_m1500)),mean(fitted(gam2_m1500)),mean(fitted(gam3_m1500)), mean(men1500$Time))
+
+fit_men1500
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_men1500 <- getViz(gam1_m1500)
+
+gam_plot1_men1500 <- check(viz_gam_men1500,
+                           a.qq = list(method = "tnorm", 
+                                       a.cipoly = list(fill = "#004c6d")), 
+                           a.respoi = list(size = 0.5), 
+                           a.hist = list(bins = 4))
+
+gam_plot1_men1500
+
+gam_plot2_m1500 <- plot( sm(viz_gam_men1500, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_m1500
+
+##gratia draw plot of best fitting model
+
+gratia_men1500 <- draw(gam1_m1500, residuals=TRUE)
+gratia_men1500
+
+#### log transformed model women400 metre ####
+
+
+women400 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+
+
+model_log_w400 <- lm(log(Time) ~ Date, data = women400)
+summary(model_log_w400)
+anova(model_log_w400)
+
+
+reg_table_log_w400 <- get_regression_table(model_log_w400, digits = 8)
+
+#Plot residuals against fitted values and Normal QQ plot
+
+autoplot(model_log_w400, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+loglm.w400<-data.frame(fit = model_log_w400$fitted.values,
+                       res=model_log_w400$residuals,
+                       time=women400$Time,
+                       res1=c(model_log_w400$residuals[2:28],NA))
+
+
+
+#Plot fitted values against Time
+plotlog1_w400 <- ggplot(loglm.w400, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_w400<-ggplot(loglm.w400, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_w400, plotlog2_w400, ncol=2)
+
+#Residual histogram
+
+his2_w400 <- ggplot(loglm.w400, aes(x = res)) +
+  geom_histogram(colour = "black", fill= "#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_w400
+
+#shapiro test of normality for residuals
+shapiro.test(residuals.lm(model_log_w400)) #p_value > 0.05 >we can assume normality
+
+
+
+durbinWatsonTest(model_l_w400) #p_value<0.05 ->residuals are auto correlated
+
+
+##### percentage transformation applied to record time-women400 ####
+
+
+women400cent <- women400 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+
+#Model fitting
+
+women400cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+
+model_cent_w400 <- lm(percentage ~ Date, data = women400cent)
+
+summary(model_cent_w400)
+
+anova(model_cent_w400)
+
+
+reg_table_cent_w400 <- get_regression_table(model_cent_w400, digits = 8)
+
+reg_table_cent_w400
+#Plot residuals against fitted values and Normal QQ plot
+
+autoplot(model_cent_w400, which = 1:2)
+
+#data frame with fitted values and residuals
+
+centlm.w400<-data.frame(fit = model_cent_w400$fitted.values,
+                        res=model_cent_w400$residuals,
+                        time=women400cent$Time,
+                        res1=c(model_cent_w400$residuals[2:28],NA))
+
+
+
+
+#Plot fitted values against Time
+
+plotcent1_w400 <- ggplot(centlm.w400, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+
+plotcent2_w400<-ggplot(centlm.w400, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_w400, plotcent2_w400, ncol=2)
+
+#Residual histogram
+
+his3_w400 <- ggplot(centlm.w400, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals")
+
+his3_w400
+
+
+shapiro.test(centlm.w400$res) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_cent_w400) #p_value<0.05 ->residuals are auto correlated
+
+###### Fitting a gam Women400 ####
+
+women400$Elapsed <- as.numeric((women400$Date - TimeZero)/365.25)
+
+#### scatterplot of response time against transformed explanatory variable Elapsed ###
+
+scplot_gam_women400 <- ggplot(women400, aes(x=Elapsed, y=Time)) +
+  geom_point()+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  labs(title = "Scatterplot for record times (400 metres for women)")
+
+scplot_gam_women400
+
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_w400 <- gam(Time ~ s(Elapsed, bs="ad", k = 20), data=women400, family = Gamma(link = log))
+
+summary(gam0_w400)
+
+gam.check(gam0_w400)
+
+
+par(mfrow=c(1,2))
+
+plot(gam0_w400, residuals=TRUE, cex=3)
+
+
+
+
+gam1_w400 <- gam(Time ~ s(Elapsed, bs="ad", k = 20),gamma = 1.4, data=women400, family = Gamma(link = log))
+
+summary(gam1_w400)
+gam.check(gam1_w400)
+
+#shapiro test of normality for residuals
+shapiro.test(residuals(gam1_w400)) #p_value > 0.05 ->we can assume normality
+
+
+
+anova(gam0_w400, gam1_w400, test = "F")
+
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_w400, residuals=TRUE, cex=3)
+
+
+
+
+
+##using reml
+
+
+gam2_w400 <- gam(Time ~ s(Elapsed, bs="ad", k = 20), method = "REML", data = women400, family = Gamma(link = log))
+
+summary(gam2_w400)
+
+gam.check(gam2_w400)
+
+par(mfrow=c(1,2))
+plot(gam2_w400, residuals=TRUE, cex=3)
+
+
+
+
+##Using ML
+gam3_w400 <- gam(Time ~ s(Elapsed, bs="ad", k = 20), method = "ML", data=women400, family = Gamma(link = log))
+
+
+summary(gam3_w400)
+
+gam.check(gam3_w400)
+
+par(mfrow=c(1,2))
+plot(gam3_w400, residuals=TRUE, cex=3)
+
+
+#comparing gcv, reml and ml
+
+gam1_w400_table <- tidy_gam(gam1_w400)
+gam1_w400_table
+gam2_w400_table <- tidy_gam(gam2_w400)
+gam2_w400_table
+gam3_w400_table <- tidy_gam(gam3_w400)
+gam3_w400_table
+
+
+#compare AIC for each model to check for prediction accuracy
+AIC(gam0_w400)
+AIC(gam1_w400)
+AIC(gam2_w400)
+AIC(gam3_w400)
+
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_women400 <- c(mean(fitted(gam0_w400)),mean(fitted(gam1_w400)),mean(fitted(gam2_w400)),mean(fitted(gam3_w400)), mean(women400$Time))
+
+fit_women400
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_women400 <- getViz(gam1_w400)
+
+gam_plot1_women400 <- check(viz_gam_women400,
+                            a.qq = list(method = "tnorm", 
+                                        a.cipoly = list(fill = "#004c6d")), 
+                            a.respoi = list(size = 0.5), 
+                            a.hist = list(bins = 4))
+
+gam_plot1_women400
+
+gam_plot2_w400 <- plot( sm(viz_gam_women400, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_w400
+
+##gratia draw plot of best fitting model
+
+gratia_women400 <- draw(gam1_w400, residuals=TRUE)
+gratia_women400
+
+#### log transformed model women800 metre ####
+
+
+women800 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+
+
+model_log_w800 <- lm(log(Time) ~ Date, data = women800)
+summary(model_log_w800)
+anova(model_log_w800)
+
+
+reg_table_log_w800 <- get_regression_table(model_log_w800, digits = 8)
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_log_w800, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+loglm.w800<-data.frame(fit = model_log_w800$fitted.values,
+                       res=model_log_w800$residuals,
+                       time=women800$Time,
+                       res1=c(model_log_w800$residuals[2:30],NA))
+
+
+
+#Plot fitted values against Time
+plotlog1_w800 <- ggplot(loglm.w800, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_w800<-ggplot(loglm.w800, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_w800, plotlog2_w800, ncol=2)
+
+#Residual histogram
+
+his2_w800 <- ggplot(loglm.w800, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_w800
+
+#shapiro test of normality for residuals
+shapiro.test(residuals.lm(model_log_w800)) #p_value > 0.05 >we can assume normality
+
+
+durbinWatsonTest(model_log_w800) #p_value<0.05 ->residuals are auto correlated
+
+
+##### percentage transformation applied to record time-women800 ####
+
+
+women800cent <- women800 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+
+#Model fitting
+
+women800cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+
+model_cent_w800 <- lm(percentage ~ Date, data = women800cent)
+
+summary(model_cent_w800)
+
+anova(model_cent_w800)
+
+
+reg_table_cent_w800 <- get_regression_table(model_cent_w800, digits = 8)
+
+reg_table_cent_w800
+
+#Plot residuals against fitted values and Normal QQ plot
+
+autoplot(model_cent_w800, which = 1:2)
+
+#data frame with fitted values and residuals
+
+centlm.w800<-data.frame(fit = model_cent_w800$fitted.values,
+                        res=model_cent_w800$residuals,
+                        time=women800cent$Time,
+                        res1=c(model_cent_w800$residuals[2:30],NA))
+
+
+#Plot fitted values against Time
+
+plotcent1_w800 <- ggplot(centlm.w800, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+
+plotcent2_w800<-ggplot(centlm.w800, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_w800, plotcent2_w800, ncol=2)
+
+#Residual histogram
+
+his3_w800 <- ggplot(centlm.w800, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 5) +
+  labs(x = "Residual", title = "Histogram of Residuals")
+
+his3_w800
+
+
+shapiro.test(centlm.w800$res) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_cent_w800) #p_value<0.05 ->residuals are auto correlated
+
+      ###### Fitting a gam women800 ####
+
+women800$Elapsed <- as.numeric((women800$Date - TimeZero)/365.25)
+
+
+#### scatterplot of response time against transformed explanatory variable Elapsed ###
+
+scplot_gam_women800 <- ggplot(women800, aes(x=Elapsed, y=Time)) +
+  geom_point()+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  labs(title = "Scatterplot for record times (800 metres for women)")
+
+scplot_gam_women800
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_w800 <- gam(Time ~ s(Elapsed, bs="ad", k = 25), data=women800, family = Gamma(link = log))
+
+summary(gam0_w800)
+
+gam.check(gam0_w800)
+
+
+par(mfrow=c(1,2))
+
+plot(gam0_w800, residuals=TRUE, cex=3)
+
+gam1_w800 <- gam(Time ~ s(Elapsed, bs="ad", k = 25),gamma = 1.4, data=women800, family = Gamma(link = log))
+
+summary(gam1_w800)
+gam.check(gam1_w800)
+
+anova(gam0_w800, gam1_w800, test = "F")
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_w800, residuals=TRUE, cex=3)
+
+##using reml
+
+
+gam2_w800 <- gam(Time ~ s(Elapsed, bs="ad", k = 25), method = "REML", data=women800, family = Gamma(link = log))
+
+summary(gam2_w800)
+
+gam.check(gam2_w800)
+
+
+plot(gam2_m800, residuals=TRUE, cex=3)
+
+
+##Using ML
+gam3_w800 <- gam(Time ~ s(Elapsed, bs="ad", k = 25), method = "ML", data=women800, family = Gamma(link = log))
+
+
+summary(gam3_w800)
+
+gam.check(gam3_w800)
+
+plot(gam3_w800, residuals=TRUE, cex=3)
+
+#comparing gcv, reml and ml
+
+gam1_w800_table <- tidy_gam(gam1_w800)
+gam1_w800_table
+gam2_w800_table <- tidy_gam(gam2_w800)
+gam2_w800_table
+gam3_w800_table <- tidy_gam(gam3_w800)
+gam3_w800_table
+
+
+#compare AIC for each model to check for prediction accuracy
+AIC(gam0_w800)
+AIC(gam1_w800)
+AIC(gam2_w800)
+AIC(gam3_w800)
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_women800 <- c(mean(fitted(gam0_w800)),mean(fitted(gam1_w800)),mean(fitted(gam2_w800)),mean(fitted(gam3_w800)), mean(women800$Time))
+
+fit_women800
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_women800 <- getViz(gam1_w800)
+
+gam_plot1_women800 <- check(viz_gam_women800,
+                            a.qq = list(method = "tnorm", 
+                                        a.cipoly = list(fill = "#004c6d")), 
+                            a.respoi = list(size = 0.5), 
+                            a.hist = list(bins = 4))
+
+gam_plot1_women800
+
+gam_plot2_w800 <- plot( sm(viz_gam_women800, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_w800
+
+##gratia draw plot of best fitting model
+
+gratia_women800 <- draw(gam1_w800, residuals=TRUE)
+gratia_women800
+
+#### log transformed model women1500 metre ####
+
+
+women1500 %>% 
+  ggplot(aes(x = Date, y = log(Time)))+
+  geom_point()
+
+model_log_w1500 <- lm(log(Time) ~ Date, data = women1500)
+
+summary(model_log_w1500)
+
+anova(model_log_w1500)
+
+
+reg_table_log_w1500 <- get_regression_table(model_log_w1500, digits = 8)
+
+#Plot residuals against fitted values and Normal QQ plot
+autoplot(model_log_w1500, which = 1:2)
+
+
+#data frame with fitted values and residuals
+
+loglm.w1500<-data.frame(fit = model_log_w1500$fitted.values,
+                        res=model_log_w1500$residuals,
+                        time=women1500$Time,
+                        res1=c(model_log_w1500$residuals[2:14],NA))
+
+
+
+#Plot fitted values against Time
+plotlog1_w1500 <- ggplot(loglm.w1500, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+plotlog2_w1500<-ggplot(loglm.w1500, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotlog1_w1500, plotlog2_w1500, ncol=2)
+
+#Residual histogram
+
+his2_w1500 <- ggplot(loglm.w1500, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 3) +
+  labs(x = "Residual", title = "Histogram of Residuals") 
+his2_w1500
+
+#shapiro test of normality for residuals
+shapiro.test(residuals.lm(model_log_w1500)) #p_value > 0.05 >we can assume normality
+
+
+durbinWatsonTest(model_log_w1500) #p_value<0.05 ->residuals are auto correlated
+
+
+##### percentage transformation applied to record time- women1500 ####
+
+
+women1500cent <- women1500 %>% 
+  mutate(percentage = round(Time/Time[1]*100,3))
+
+#Model fitting
+
+women1500cent %>% 
+  ggplot(aes(x = Date, y = percentage))+
+  geom_point()
+
+
+model_cent_w1500 <- lm(percentage ~ Date, data = women1500cent)
+
+summary(model_cent_w1500)
+
+anova(model_cent_w1500)
+
+
+reg_table_cent_w1500 <- get_regression_table(model_cent_w1500, digits = 8)
+
+reg_table_cent_w1500
+#Plot residuals against fitted values and Normal QQ plot
+
+autoplot(model_cent_w1500, which = 1:2)
+
+#data frame with fitted values and residuals
+
+centlm.w1500<-data.frame(fit = model_cent_w1500$fitted.values,
+                         res=model_cent_w1500$residuals,
+                         time=women1500cent$Time,
+                         res1=c(model_cent_w1500$residuals[2:14],NA))
+
+
+
+
+#Plot fitted values against Time
+
+plotcent1_w1500 <- ggplot(centlm.w1500, aes(x=time,y=res)) +
+  geom_point() +
+  labs(x="Time", y="Residuals", title="Residuals vs Time")
+
+
+#Plot residuals against the previous residuals (lag 1)
+
+plotcent2_w1500<-ggplot(centlm.w1500, aes(x=res1,y=res)) +
+  geom_point() +
+  labs(y="Residuals", x="Residuals lag 1", title="Residual Independence")
+
+
+
+#Create a grid with the two plots side-by-side
+
+grid.arrange(plotcent1_w1500, plotcent2_w1500, ncol=2)
+
+#Residual histogram
+
+his3_w1500 <- ggplot(centlm.w1500, aes(x = res)) +
+  geom_histogram(colour = "black", fill="#004c6d", bins = 3) +
+  labs(x = "Residual", title = "Histogram of Residuals")
+
+his3_w1500
+
+
+shapiro.test(centlm.w1500$res) #p_value > 0.05 >we can assume normality
+
+durbinWatsonTest(model_cent_w1500) #p_value<0.05 ->residuals are auto correlated
+
+###### Fitting a gam Women1500 ####
+
+women1500$Elapsed <- as.numeric((women1500$Date - TimeZero)/365.25)
+
+#### scatterplot of response time against transformed explanatory variable Elapsed ###
+
+scplot_gam_women1500 <- ggplot(women1500, aes(x=Elapsed, y=Time)) +
+  geom_point()+
+  theme(text=element_text(size=8), axis.text.x = element_text(angle = 90), panel.grid.minor = element_blank(), plot.title = element_text(hjust = 0.5, face = "bold"))+
+  labs(title = "Scatterplot for record times (1500 metres for women)")
+
+scplot_gam_women1500
+
+#gam using gcv
+##without using gamma parameter##
+
+gam0_w1500 <- gam(Time ~ s(Elapsed, bs="cr", k = 8), data=women1500, family = Gamma(link = log))
+
+summary(gam0_w1500)
+
+gam.check(gam0_w1500)
+
+par(mfrow=c(1,2))
+
+plot(gam0_w1500, residuals=TRUE, cex=3)
+
+
+gam1_w1500 <- gam(Time ~ s(Elapsed, bs="cr", k = 8),gamma = 1.4, data=women1500, family = Gamma(link = log))
+
+summary(gam1_w1500)
+gam.check(gam1_w1500)
+
+anova(gam0_w1500, gam1_w1500, test = "F")
+#Null hypothesis that model 0 is correct against the alternative hypothesis that model 1 is correct using F statistic. if H0 is true, probability of obtaining the F value of 2.9461 is only 0.1023. So h0 is not plausible.
+
+
+par(mfrow=c(1,2))
+
+plot(gam1_w1500, residuals=TRUE, cex=3)
+
+
+
+
+
+##using reml
+
+
+gam2_w1500 <- gam(Time ~ s(Elapsed, bs="cr", k = 8), method = "REML", data=women1500, family = Gamma(link = log))
+
+summary(gam2_w1500)
+
+gam.check(gam2_w1500)
+
+
+plot(gam2_w1500, residuals=TRUE, cex=3)
+
+
+##Using ML
+gam3_w1500 <- gam(Time ~ s(Elapsed, bs="cr", k = 8), method = "ML", data=women1500, family = Gamma(link = log))
+
+
+summary(gam3_w1500)
+
+gam.check(gam3_w1500)
+
+plot(gam3_w1500, residuals=TRUE, cex=3)
+
+#comparing gcv, reml and ml
+
+gam1_w1500_table <- tidy_gam(gam1_w1500)
+gam1_w1500_table
+gam2_w1500_table <- tidy_gam(gam2_w1500)
+gam2_w1500_table
+gam3_w1500_table <- tidy_gam(gam3_w1500)
+gam3_w1500_table
+
+
+#compare AIC for each model to check for prediction accuracy
+
+AIC(gam0_w1500)
+AIC(gam1_w1500)
+AIC(gam2_w1500)
+AIC(gam3_w1500)
+
+### Checking goodness of fit using means of fitted values compared to mean of raw data ###
+
+fit_women1500 <- c(mean(fitted(gam0_w1500)),mean(fitted(gam1_w1500)),mean(fitted(gam2_w1500)),mean(fitted(gam3_w1500)), mean(women1500$Time))
+
+fit_women1500
+
+#### Visualisation of best fiting gam model for the dataset ####
+
+viz_gam_women1500 <- getViz(gam1_w1500)
+
+gam_plot1_women1500 <- check(viz_gam_women1500,
+                             a.qq = list(method = "tnorm", 
+                                         a.cipoly = list(fill = "#004c6d")), 
+                             a.respoi = list(size = 0.5), 
+                             a.hist = list(bins = 4))
+
+gam_plot1_women1500
+
+gam_plot2_w1500 <- plot( sm(viz_gam_women1500, 1) )+
+  l_fitLine(colour = "red") + l_rug(mapping = aes(x=x, y=y), alpha = 0.8) +
+  l_ciLine(mul = 5, colour = "blue", linetype = 2) + 
+  l_points(shape = 19, size = 1, alpha = 0.1) + theme_classic()
+
+gam_plot2_w1500
+
+##gratia draw plot of best fitting model
+
+gratia_women1500 <- draw(gam1_w1500, residuals=TRUE)
+gratia_women1500
+
+#### Compare the models for men and women for all the events ###
+
+grid.arrange(gratia_men400, gratia_men800, gratia_men1500, ncol = 3)
+
+grid.arrange(gratia_women400, gratia_women800, gratia_women1500, ncol = 3)
+
+
+### Compare the progression of times of events separately for men and women ###
+
+grid.arrange(gratia_men400, gratia_women400, ncol = 2)
+grid.arrange(gratia_men800, gratia_women800, ncol = 2)
+grid.arrange(gratia_men1500, gratia_women1500, ncol = 2)
+
+
