@@ -68,45 +68,19 @@ Comparative analyses were performed:
 
 ### Conclusion
 
-The study initially attempted to fit linear regression models which are parametric and not flexible
-enough to depict the entire structure of the progression of record times over the years.
-The research elaborated here on the world record data for athletics has shown that generalised
-additive models have the flexibility to capture the entire nonlinear trend observed in the decline
-of the response variable record time over the date covariate. The transformed explanatory
-variable Elapsed has a negative smooth relation with the response variable Time for all the event
-categories considered. The estimated effective degrees of freedom of the smooth terms across all
-the categories have been significantly higher than 1 confirming the presence of the smooth term
-for the covariate. Deviance explained values very close to 100 accentuate the robustness of the
-models. Consistent values of estimated effective degrees of freedom for individual categories for
-men and women have been observed using different methods of selecting smoothing parameter
-of generalised additive model which strengthens the findings that gams provide good explanation
-of the progress of the record times.
-Among the record times for all categories for men, the highest effective degrees of freedom were
-observed in the 400 metres category, closely followed by 1500 metres. The effective degrees of
-freedom value for 800 metres category were found to be the lowest suggesting a nearly linear
-trend with slight curvature in some regions. The plots of the models also align with the
-inferences obtained numerically.
-Comparing the models fitted for women for the different categories of events analysed, the
-highest effective degrees of freedom was observed for 800 metres category. The effective
-degrees of freedom of the model for 400 metres is marginally higher than the value for 1500.
-Comparing the partial effect plots of 400 metres category for men and women separately, the
-record times for men shows a continuous negative trend with increase in Elapsed covariate. In
-the case of women, the trend shows a steep decline till the value of Elapsed of around 57 and a
-slight increase for a short range up to a value corresponding to the value of Elapsed of around 60
-and thereafter almost linear decline in the value of response is observed. Adaptive smoothing
-applied to the model for women aided to capture the linear and nonlinear trends in the data.
-Considering the partial effect plots for the category 800 metres for men and women separately,
-the plot for men indicates a nearly linear trend with slight curvature along the range of the
-covariate. The plot indicates a steady nonlinear decline of the response variable record time. The
-partial effect of the plot for women obtained shows that the record time decreases till the value of
-around 40 of the Elapsed covariate. After 40, the value of response increases till about 48 of
-Elapsed and thereafter it decreases almost linearly further.
-The partial effect plots for 1500 metres for men shows that the response time decreases till the
-value of around 50 of the transformed explanatory variable Elapsed, where a shift in the curve is
-observed and a nonlinear pattern is observed over a short range of Elapsed until the value of 60.
-Beyond the value of 60 of Elapsed explanatory variable, the response shows a general linear
-decline in values. This also necessitated the usage of adaptive smoothing to capture the varying
-trend of linearity and non-linearity to be captured and the flexibility of generalised additive
-models to be utilised completely. However, in the case of women, a general linear negative trend
-was observed till Elapsed value of 80 after which the curve flattens out due to sparsity of points
-in the region.
+- **Initial Linear Models**: Not flexible enough to capture the progression of record times over the years.
+- **Generalized Additive Models (GAMs)**: Effectively captured the nonlinear trends in record times across different events.
+- **Elapsed Variable**: Showed a consistent negative smooth relationship with record times.
+- **Effective Degrees of Freedom**: Higher than 1 across all categories, confirming the presence of smooth terms for the covariate.
+- **Deviance Explained**: Values close to 100% indicated robust models.
+- **Consistency**: Effective degrees of freedom values were consistent across different smoothing parameter selection methods.
+- **Men’s Records**: Highest degrees of freedom in 400m, followed by 1500m, with 800m showing the lowest (nearly linear trend).
+- **Women’s Records**: Highest degrees of freedom in 800m, followed by 400m and 1500m.
+- **Partial Effect Plots for Men**:
+  - **400m**: Continuous negative trend with Elapsed.
+  - **800m**: Nearly linear with slight curvature.
+  - **1500m**: Initial nonlinear decline, shift at Elapsed ~50, then general linear decline.
+- **Partial Effect Plots for Women**:
+  - **400m**: Steep decline till Elapsed ~57, slight increase till ~60, then almost linear decline.
+  - **800m**: Decrease till Elapsed ~40, increase till ~48, then linear decline.
+  - **1500m**: Linear decline till Elapsed ~80, then curve flattens out due to sparsity of data points.
