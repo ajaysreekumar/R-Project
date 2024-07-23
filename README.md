@@ -84,3 +84,12 @@ Comparative analyses were performed:
   - **400m**: Steep decline till Elapsed ~57, slight increase till ~60, then almost linear decline.
   - **800m**: Decrease till Elapsed ~40, increase till ~48, then linear decline.
   - **1500m**: Linear decline till Elapsed ~80, then curve flattens out due to sparsity of data points.
+
+  ### Limitations
+- **Excluded Influencing Factors**: Many factors that may influence record times, such as physical and physiological variables of athletes, climatic conditions, and technological advancements, were not included in the data and analysis.
+- **Assumption of Homogeneity**: The analysis treats all athletes as similar, which may not be accurate.
+- **Data Sparsity**: Sparsity of data in some regions may affect the accuracy of predicted values.
+
+### Further Analysis
+- **Prediction of Record Times**: Extend the analysis to predict future record times, aiding future athletes aiming to set world records.
+- **Inclusion of Additional Covariates**: Incorporate relevant covariate data to improve accuracy and robustness of the results.
