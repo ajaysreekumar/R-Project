@@ -1,4 +1,4 @@
-## Modelling the Progression of World Records in Athletics - Events over Middle Distances
+# Modelling the Progression of World Records in Athletics - Events over Middle Distances
 
 ### Introduction
 
@@ -85,7 +85,7 @@ Comparative analyses were performed:
   - **800m**: Decrease till Elapsed ~40, increase till ~48, then linear decline.
   - **1500m**: Linear decline till Elapsed ~80, then curve flattens out due to sparsity of data points.
 
-  ### Limitations
+ ### Limitations
 - **Excluded Influencing Factors**: Many factors that may influence record times, such as physical and physiological variables of athletes, climatic conditions, and technological advancements, were not included in the data and analysis.
 - **Assumption of Homogeneity**: The analysis treats all athletes as similar, which may not be accurate.
 - **Data Sparsity**: Sparsity of data in some regions may affect the accuracy of predicted values.
